@@ -1,0 +1,124 @@
+---
+title: "697D-Final"
+author: "Elaona Lemoto, Katherine (Yang) Liu"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(magrittr)
+library(ggplot2)
+library(dplyr)
+library(ggforce)
+library(tidyr)
+library(readr)
+library(purrr)
+library(tidyverse)
+```
+
+** A description of the data preparation process.  
+**-take aggregate of the variates
+**-categorical, perhaps using the proportion instead
+**-look at the medium of the entire category 
+**-Take a weighted mean, weighted by the relative size of the counties.
+
+```{r}
+(df <- read_csv(""))
+n <- nrow(df)
+```
+
+*Brief summary of the data, variables
+
+There are $n=150$ observations of the proxies for food insecurities
+$z_1=$ FOODINSEC,     
+$z_2=$ CH_FOODINSEC,      
+$z_3=$ VLFOODSEC,   
+
+and the ,   
+$y_1=$ breaking length,    
+$y_2=$ elastic modulus,   
+$y_3=$ stress at failure,    
+$y_4=$ burst strength.   
+
+In order to conduct this study, we will begin by conducting a multivariate regression model with all of our predictor variables of interest and our three explained variables regarding food insecurity. Included in this method will be simultaneous confidence intervals for our predictor variables.
+```{r}
+# using the lm()
+res <- lm(cbind(,,) ~ ., data = df)
+summary(res)
+
+# Residuals:
+head(resid(res))
+# Fitted values:
+head(fitted(res))
+# Residual standard error:
+sigma(res)
+round(vcov(res), 2)
+```
+
+**** (I think this is incorrect, please take a look at the next chunk of code) 95% simultaneous confidence intervals 
+```{r}
+alpha <- 0.05
+
+p <- 
+n <- nrow(df)
+
+Y <- as.matrix(df %>% select())
+(y_bar <- matrix(colMeans(Y), ncol = 1))
+
+F_critical <- (p * (n - 1) / (n - p)) * qf(1 - alpha, p, n - p) 
+s_d <- diag(cov(df))
+
+CI_mat <-
+  mapply(
+    function(y_bar, s_d) y_bar + c(-1, 1) * sqrt(F_critical * s_d / n), 
+    y_bar,
+    s_d
+    )
+cat("Simultaneous confidence intervals:\n")
+t(CI_mat)
+```
+
+Prediction intervals + confidence intervals
+```{r}
+alpha <- 0.05
+
+Y <- as.matrix(df %>% select(1:4))
+m <- ncol(Y) # number of responses
+Z <- as.matrix(cbind(const = 1, df %>% select(5:8)))
+r <- ncol(Z) - 1  # number of predictors (excluding constant)
+
+b <- solve(t(Z) %*% Z) %*% t(Z) %*% Y
+
+# new observation
+z0 <- 
+  matrix(
+    c(1, 0.33, 45.5, 20.375, 1.01),
+    ncol = 1,
+    dimnames = list(c("const", "BL", "EM", "SF", "BS"), NULL)
+  )
+
+# center
+cntr <- t(b) %*% z0
+
+# Prediction interval:
+fctr_pred <- 
+  sqrt(
+    (1 + t(z0) %*% solve(t(Z) %*% Z) %*% z0) * 
+      (m * (n - r - 1) * qf(alpha, m, n - r - m, lower.tail = FALSE) / (n - r - m)))
+
+a <- matrix(c(1, 0, 0, 0), ncol = 1)
+half_CI <- (sqrt(t(a) %*% (estSigma * n / (n - r - 1)) %*% a)) * fctr_pred
+pred_CI_Y1 <- c(t(a) %*%  cntr - half_CI, t(a) %*%  cntr + half_CI)
+##### ****** Use mapply here? 
+
+# Confidence interval: 
+fctr <- 
+  sqrt(
+    (t(z0) %*% solve(t(Z) %*% Z) %*% z0) * 
+      (m * (n - r - 1) * qf(alpha, m, n - r - m, lower.tail = FALSE) / (n - r - m)))
+```
+
+
+From here we will utilize the bootstrapping method for evaluating point estimates from R-squared. This will be done by creating bootstrap sample estimates for R-squared and then confidence intervals for R-squared based on the distribution of bootstrap distributions we simulate. Our second method with bootstrapping will be conducted by calculating the likelihood ratio test statistic of one of or more of our predictor variables and comparing it to the F distribution and the approximate chi-squared distribution.
+
+
