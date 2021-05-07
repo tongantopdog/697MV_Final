@@ -22,8 +22,45 @@ library(tidyverse)
 **-look at the medium of the entire category 
 **-Take a weighted mean, weighted by the relative size of the counties.
 
+
+
+##Introduction
+
+Social determinants of health are defined as environmental factors, such as, where someone lives, where they go to school, work, and so forth, and how it affects a whole set of health outcomes and their overall quality of life. For instance, for folks who live in a middle class neighborhood might have higher access to grocery stores or farmers markets and a recreational facility, comparable to lower income neighborhoods that are found to have more fast food restaurants, less available grocery stores and more supercenters, and lack of recreational facilites. Social determinants of health is a growing field as more and more people are attempting to better understand how environmental factors impact one's health.
+
+For this project in particular, we aim to study the social determinants of food security. We would like to look at how environmental factors like access to stores, proximity to stores, assistance for food by State, etc., impacts rates of food insecurity. What we currently understand about food insecurity is that it is not an isolated act. While income plays a part in one's ability to access food, there are several other variables that impact one’s security in having access to food. What the FDA proposed through the collection of these data is that different parts of a household's environment can impact their access to food. Therefore, the purpose of this project is to utilize the varying factors of one’s household in the geological, social, and economic sense from the variables outlined above, and uncover or magnify any measured impacts or explanation of a State’s percentage of households with food insecurity, with low food insecurity, and child food insecurity. 
+
+
+
+##Data
+
+In order to study this even further, we found data from the United States Department of Agriculture under their Economic Research Service. They published a dataset with over 275 variables, uniquely identified by FIPS county codes. For each county, they collected categories of data like Access, Health, Local Foods, and Price Taxes etc. Within these categories, this dataset contains several variables with comprehensive data on counts of households that have or do not have access to supermarkets, counts of store availability and whether it is within a walking distance of homes in that county, counts of fast food restaurant availability near home, counts of WIC redemptions, and number of local foods and farms, as well as variables concerning  socioeconomic status. Also included in this dataset were variables concerning food insecurity: household food insecurity, household low food insecurity, and child food insecurity, however, accounted for at the State and not FIPS county level. 
+
+
+##Research Questions
+
+Using the data from the data from the FDA, we are interested in measuring the possible impact the environmental predictor variables described above with household 
+
+
+Using the 
+
+
+
+
+##Method
+
+
+
+##Results
+
+
+
+##Conclusion
+
 ```{r}
-(df <- read_csv(""))
+(df <- read_csv("final_data.csv"))
+df<-df%>% 
+  select(-FOODINSEC_12_14, -VLFOODSEC_12_14, -State, -CH_VLFOODSEC_14_17,-PCT_LACCESS_MULTIR15)
 n <- nrow(df)
 ```
 
@@ -43,7 +80,7 @@ $y_4=$ burst strength.
 In order to conduct this study, we will begin by conducting a multivariate regression model with all of our predictor variables of interest and our three explained variables regarding food insecurity. Included in this method will be simultaneous confidence intervals for our predictor variables.
 ```{r}
 # using the lm()
-res <- lm(cbind(,,) ~ ., data = df)
+res <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ ., data = df)
 summary(res)
 
 # Residuals:
@@ -59,10 +96,12 @@ round(vcov(res), 2)
 ```{r}
 alpha <- 0.05
 
-p <- 
+p <- 21
 n <- nrow(df)
 
-Y <- as.matrix(df %>% select())
+Y <- as.matrix(df %>% 
+                 select(FOODINSEC_15_17,CH_FOODINSEC_14_17, VLFOODSEC_15_17))
+               
 (y_bar <- matrix(colMeans(Y), ncol = 1))
 
 F_critical <- (p * (n - 1) / (n - p)) * qf(1 - alpha, p, n - p) 
@@ -82,20 +121,24 @@ Prediction intervals + confidence intervals
 ```{r}
 alpha <- 0.05
 
-Y <- as.matrix(df %>% select(1:4))
+Y <- as.matrix(df %>% select(21:23))
 m <- ncol(Y) # number of responses
-Z <- as.matrix(cbind(const = 1, df %>% select(5:8)))
+Z <- as.matrix(cbind(const = 1, df %>% select(1:20)))
 r <- ncol(Z) - 1  # number of predictors (excluding constant)
+
+
 
 b <- solve(t(Z) %*% Z) %*% t(Z) %*% Y
 
-# new observation
+# new observation for predictors 
 z0 <- 
   matrix(
-    c(1, 0.33, 45.5, 20.375, 1.01),
-    ncol = 1,
-    dimnames = list(c("const", "BL", "EM", "SF", "BS"), NULL)
+    c(1,0.33, 0.5, 0.6),
+    ncol=1, 
+    dimnames = list(c("const", "HH_FINSEC", "VLHH_FINSEC", "CH_FINSEC"), NULL)
   )
+
+#choose z0 that is meaningful 
 
 # center
 cntr <- t(b) %*% z0
@@ -103,7 +146,7 @@ cntr <- t(b) %*% z0
 # Prediction interval:
 fctr_pred <- 
   sqrt(
-    (1 + t(z0) %*% solve(t(Z) %*% Z) %*% z0) * 
+    (1 + t(z0) %*% solve(t(Z) %*% Z,tol = 1e-19) %*% z0) * 
       (m * (n - r - 1) * qf(alpha, m, n - r - m, lower.tail = FALSE) / (n - r - m)))
 
 a <- matrix(c(1, 0, 0, 0), ncol = 1)
@@ -119,6 +162,140 @@ fctr <-
 ```
 
 
+
+# Factor Analysis
+
+```{r}
+#Food Insecurity
+df_f1 <- df %>% select(22:24)
+R <- cor(df_f1)
+eig <- eigen(R)
+(Ltilde_m1 <- sqrt(eig$values[1]) * eig$vectors[ , 1, drop = F])
+
+psi_tilde_m1 <- diag(R - Ltilde_m1 %*% t(Ltilde_m1))
+Psi_tilde_m1 <- diag(psi_tilde_m1)
+residual_matrix_m1 <- R - Ltilde_m1 %*% t(Ltilde_m1) - Psi_tilde_m1
+(eig$values[1] / sum(eig$values))
+
+#Access
+
+
+
+
+#Demographics
+
+
+
+#Socioeconomic Factors
+
+
+```
+
 From here we will utilize the bootstrapping method for evaluating point estimates from R-squared. This will be done by creating bootstrap sample estimates for R-squared and then confidence intervals for R-squared based on the distribution of bootstrap distributions we simulate. Our second method with bootstrapping will be conducted by calculating the likelihood ratio test statistic of one of or more of our predictor variables and comparing it to the F distribution and the approximate chi-squared distribution.
 
+#Bootstrapping
+##Likelihood Ratio Test
 
+```{r}
+n <- nrow(df)
+
+Y <- as.matrix(df %>% select(21:23))
+m <- ncol(Y) # number of responses
+Z <- as.matrix(cbind(const = 1, df %>% select(1:21)))
+r <- ncol(Z) - 1  # number of predictors (excluding constant)
+
+b <- solve(t(Z) %*% Z,tol = 1e-19) %*% t(Z) %*% Y
+pred <- Z %*% b
+resid <- Y - pred
+
+b
+
+variables_to_test <-  c("PCT_LACCESS_POP15", "PCT_LACCESS_HHNV15","PCT_LACCESS_SNAP15","PCT_LACCESS_CHILD15","GROCPTH16","SUPERCPTH16","PCT_LACCESS_WHITE15","PCT_LACCESS_BLACK15","SNAPSPTH17","PCT_LACCESS_HISP15","PCT_LACCESS_NHASIAN15","PCT_LACCESS_NHNA15","PCT_LACCESS_NHPI15","FFRPTH16","FSRPTH16","PCT_SNAP17")
+
+
+variables_to_keep <- setdiff(colnames(Z), variables_to_test)
+q <- length(variables_to_keep) - 1 # Not counting the intercept
+grp1 <- rownames(b) %in% variables_to_keep
+grp2 <- rownames(b) %in% variables_to_test
+
+estSigma <- t(resid) %*% resid / n
+
+b_grp1 <- solve(t(Z[ , grp1]) %*% Z[ , grp1]) %*% t(Z[ , grp1]) %*% Y
+pred_grp1 <- Z[ , grp1] %*% b_grp1
+resid_grp1 <- Y - pred_grp1
+
+estSigma1 <- t(resid_grp1) %*% resid_grp1 / n
+
+LR_test_statistic <- -n * (log(det(estSigma)) - log(det(estSigma1)))
+
+# Approximate likelihood ratio test statistic:
+approx_LR_test_statistic <- 
+  -(n - r - 1 - 0.5 * (m - r + q + 1)) * (log(det(estSigma)) - log(det(estSigma1)))
+
+# Reject?
+ifelse(approx_LR_test_statistic > qchisq(0.95, m * (r - q)), "Reject H0", "Don't reject H0")
+
+W <- det(estSigma) / det(estSigma1)
+
+h <- length(variables_to_test)  
+# h = q' = r - q; see corrected slide 25 in notes for Chapter 7
+
+d1 <- (n - r - 1) - 0.5 * (m - h + 1)
+d2 <- (m * h - 2)/4
+d3 <- m^2 + h^2 - 5
+d3 <- if (d3 > 0) { 
+  sqrt(((m * h)^2 - 4) / d3)
+} else { 1 }
+
+F_approx_stat <- ((W^(-1 / d3) - 1) * (d1 * d3 - 2 * d2)) / (m  * h)
+
+# The corresponding p-value is:
+pf(F_approx_stat, m * h, d1 * d3 - 2 * d2, lower.tail = FALSE)
+
+
+# Bootstrap study:
+n <- nrow(df)
+
+S <- 10000
+LR_stat_sample <- numeric(S)
+
+s <- 1
+while (s <= S) {
+  try({
+    bootstrap_sample_idx <- sample(n, replace = TRUE)
+    bstp_df <- df[bootstrap_sample_idx, ]
+    
+    Y <- as.matrix(bstp_df %>% select(1:4))
+    m <- ncol(Y)
+    
+    variables_to_test <- c("PCT_LACCESS_POP15", "PCT_LACCESS_HHNV15","PCT_LACCESS_SNAP15","PCT_LACCESS_CHILD15","GROCPTH16","SUPERCPTH16","PCT_LACCESS_WHITE15","PCT_LACCESS_BLACK15","SNAPSPTH17","PCT_LACCESS_HISP15","PCT_LACCESS_NHASIAN15","PCT_LACCESS_NHNA15","PCT_LACCESS_NHPI15","FFRPTH16","FSRPTH16","PCT_SNAP17")
+
+    variables_to_keep <- setdiff(colnames(Z), variables_to_test)
+    grp1 <- rownames(b) %in% variables_to_keep
+    grp2 <- rownames(b) %in% variables_to_test
+    
+    Z <- as.matrix(cbind(const = 1, bstp_df %>% select(1:21)))
+    
+    Z[ , grp2] <- Z[sample(nrow(Z)), grp2]   # shuffle rows of tested predictors
+    
+    r <- ncol(Z) - 1
+    
+    b <- solve(t(Z) %*% Z, tol = 2.05722e-17) %*% t(Z) %*% Y
+    pred <- Z %*% b
+    resid <- Y - pred
+    
+    estSigma <- t(resid) %*% resid / n
+    
+    b_grp1 <- solve(t(Z[ , grp1]) %*% Z[ , grp1]) %*% t(Z[ , grp1]) %*% Y
+    estSigma1 <- t(Y - Z[ , grp1] %*% b_grp1) %*% (Y - Z[ , grp1] %*% b_grp1) / n
+    
+    LR_stat_sample[s] <- det(estSigma) / det(estSigma1)
+    s <- s + 1
+  })
+}
+
+# p-value for bootstrap sample:
+sum( LR_stat_sample < W ) / S
+
+```
+#Use HW 7 code 
