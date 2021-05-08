@@ -37,17 +37,50 @@ For this project in particular, we aim to study the social determinants of food 
 In order to study this even further, we found data from the United States Department of Agriculture under their Economic Research Service. They published a dataset with over 275 variables, uniquely identified by FIPS county codes. For each county, they collected categories of data like Access, Health, Local Foods, and Price Taxes etc. Within these categories, this dataset contains several variables with comprehensive data on counts of households that have or do not have access to supermarkets, counts of store availability and whether it is within a walking distance of homes in that county, counts of fast food restaurant availability near home, counts of WIC redemptions, and number of local foods and farms, as well as variables concerning  socioeconomic status. Also included in this dataset were variables concerning food insecurity: household food insecurity, household low food insecurity, and child food insecurity, however, accounted for at the State and not FIPS county level. 
 
 
+###Data Distributions 
+
+
+
+```{r}
+
+hist(df$FOODINSEC_15_17)
+hist(df$VLFOODSEC_15_17)
+hist(df$CH_FOODINSEC_14_17)
+
+```
+
 ##Research Questions
 
-Using the data from the data from the FDA, we are interested in measuring the possible impact the environmental predictor variables described above with household 
+Using the data from the FDA, we are interested in measuring the varying geographic distance to resources, social net programs and assistance, and/or economic costs or barriers have any correlation with the aggregate percentage of households with food insecurity, households with low food security, and child food insecurity in at the State level.
 
+A secondary question we would like to explore whether or not there are certain variables or factors that capture much of the variation we might see in our food insecurity variables.As mentioned above, the dataset created by the ERS department of the FDA has placed all of their variables in categories which we will use to create a factor analysis of food
+insecurity. 
 
-Using the 
-
-
+An additional possible question we would like to explore is whether a factor of socioeconomic status holds a significant impact on food insecurity. Redlining in the U.S. was a systematic discriminatory practice that divested from predominantly black and brown neighborhoods, therefore, we should expect to see a significance in socioeconomic demographics and food insecurity in the U.S.
 
 
 ##Method
+
+
+In order to conduct this study, we will begin by conducting a multivariate
+regression model with all of our predictor variables of interest and our three explained variables regarding food insecurity. Our predictor variables are:
+
+- percent of population with low access to a stores in 2015
+- percent of households with no car and low access to stores in 2015
+- percent of SNAP households with low access to stores in 2015
+- percent of children with low access to store in 2015
+
+Demographics:
+
+- percent of 
+
+
+
+Included in this method will be simultaneous confidence intervals for our predictor variables.
+
+From here we will utilize the bootstrapping method for evaluating point estimates from R-squared. This will be done by creating bootstrap sample estimates for R-squared and then confidence intervals for R-squared based on the distribution of bootstrap distributions we simulate. Our second method with bootstrapping will be conducted by calculating the likelihood ratio test statistic of one of or more of our predictor variables and comparing it to the F distribution and the approximate chi-squared distribution. 
+
+Another method we will be using from our course is conducting a factor analysis of our categories. This will implement our two last research questions regarding the categories of variables that the FDA’s dataset created as well as measuring whether certain factors do a better job of explaining the variation comparable to 
 
 
 
