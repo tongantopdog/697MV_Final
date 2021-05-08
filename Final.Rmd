@@ -23,7 +23,6 @@ library(tidyverse)
 **-Take a weighted mean, weighted by the relative size of the counties.
 
 
-
 ##Introduction
 
 Social determinants of health are defined as environmental factors, such as, where someone lives, where they go to school, work, and so forth, and how it affects a whole set of health outcomes and their overall quality of life. For instance, for folks who live in a middle class neighborhood might have higher access to grocery stores or farmers markets and a recreational facility, comparable to lower income neighborhoods that are found to have more fast food restaurants, less available grocery stores and more supercenters, and lack of recreational facilites. Social determinants of health is a growing field as more and more people are attempting to better understand how environmental factors impact one's health.
@@ -61,7 +60,6 @@ An additional possible question we would like to explore is whether a factor of 
 
 ##Method
 
-
 In order to conduct this study, we will begin by conducting a multivariate
 regression model with all of our predictor variables of interest and our three explained variables regarding food insecurity. Our predictor variables are:
 
@@ -69,13 +67,22 @@ regression model with all of our predictor variables of interest and our three e
 - percent of households with no car and low access to stores in 2015
 - percent of SNAP households with low access to stores in 2015
 - percent of children with low access to store in 2015
+- percent of neighborhood that is white 
+- percent of neighborhood that is black
+- percent of neighborhood that is asian
+- percent of neighborhood that is native american
+- percent of neighborhood that is native hawaiian and pacific islander 
+- percent of grocery stores per thousand people people in 2016
+- percent of super centers per thousand people people
+- percent of SNAP authorized stores for every ten thousand people
+- percent of WIC authorized stores per thousand people
+- percent of Fast food restaurants per thousand people in 2016
+- percent of full service restaurants per thousand people in 2016
+- percent of students eligible for reduced-price lunch in 2015
+- percent of adults with obesity in 2017
+- percent of Recreation & fitness facilities per thousand people in 2016
 
-Demographics:
-
-- percent of 
-
-
-
+We will be interpeting the multivariate linear model function calculations in R. 
 Included in this method will be simultaneous confidence intervals for our predictor variables.
 
 From here we will utilize the bootstrapping method for evaluating point estimates from R-squared. This will be done by creating bootstrap sample estimates for R-squared and then confidence intervals for R-squared based on the distribution of bootstrap distributions we simulate. Our second method with bootstrapping will be conducted by calculating the likelihood ratio test statistic of one of or more of our predictor variables and comparing it to the F distribution and the approximate chi-squared distribution. 
@@ -93,7 +100,7 @@ Another method we will be using from our course is conducting a factor analysis 
 ```{r}
 (df <- read_csv("final_data.csv"))
 df<-df%>% 
-  select(-FOODINSEC_12_14, -VLFOODSEC_12_14, -State, -CH_VLFOODSEC_14_17,-PCT_LACCESS_MULTIR15)
+  select(-FOODINSEC_12_14, -VLFOODSEC_12_14, -State, -CH_VLFOODSEC_14_17, -SNAPSPTH17)
 n <- nrow(df)
 ```
 
@@ -157,10 +164,7 @@ alpha <- 0.05
 Y <- as.matrix(df %>% select(21:23))
 m <- ncol(Y) # number of responses
 Z <- as.matrix(cbind(const = 1, df %>% select(1:20)))
-r <- ncol(Z) - 1  # number of predictors (excluding constant)
-
-
-
+r <- ncol(Z) - 1  # number of predictors (excluding constantn
 b <- solve(t(Z) %*% Z) %*% t(Z) %*% Y
 
 # new observation for predictors 
