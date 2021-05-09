@@ -1,7 +1,9 @@
 ---
 title: "697D-Final"
 author: "Elaona Lemoto, Katherine (Yang) Liu"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
