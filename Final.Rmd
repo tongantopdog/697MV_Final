@@ -207,7 +207,7 @@ for (i in 1:3){
 }
 ```
 
-Above we have our simultaneous confidence interval and simultaneous prediction intervals.
+Above we have our simultaneous confidence interval and simultaneous prediction intervals for potential new observations.
 
 # Factor Analysis
 
@@ -269,10 +269,9 @@ Looking at Food Insecurity, we see that the total variance for this factors is s
 
 Evaluating Store Access with the variables: Grocery store per thousand people, Super Center per thousand people, WICS-accepted stores per thousand people, Fast food restaurants per thousand people, Full-service restaurants and percent of SNAP redemptions in a county. Evaluting its residual matrix, all of the surrounding elements are very small which tells us that Store Access is a sufficient factor.
 
-
 Another similar factor was Access. Looking at our variables concering geographical access to a store near households, 93 percent of its variation can be explained by a single factor. Also evaluating the residual matrix calculated from our eigenvalue and vectors, we can see that Access is a very sufficient factor variable. 
 
-And lastly, one of our interests was to look at the potential realtionship between racial demographics. Here we can see if our demographic variables would be sufficient for a single factor. Evaluating the single factors 
+And lastly, one of our interests was to look at the potential realtionship between racial demographics. Here we can see if our demographic variables would be sufficient for a single factor. Evaluating the single factors
 
 
 From here we will utilize the bootstrapping method for evaluating point estimates from R-squared. This will be done by creating bootstrap sample estimates for R-squared and then confidence intervals for R-squared based on the distribution of bootstrap distributions we simulate. Our second method with bootstrapping will be conducted by calculating the likelihood ratio test statistic of one of or more of our predictor variables and comparing it to the F distribution and the approximate chi-squared distribution.
@@ -280,7 +279,7 @@ From here we will utilize the bootstrapping method for evaluating point estimate
 #Bootstrapping
 ##Likelihood Ratio Test
 ```{r}
-variables_to_test <-  c("PCT_LACCESS_POP15","PCT_LACCESS_HHNV15","PCT_LACCESS_SNAP15","PCT_LACCESS_CHILD15","PCT_NHWHITE10", "PCT_NHASIAN10","PCT_NHNA10","PCT_NHPI10", "FSRPTH16","PCT_SNAP17", "PCT_OBESE_ADULTS17")
+variables_to_test <-  c("PCT_LACCESS_POP15", "PCT_LACCESS_SNAP15", "PCT_LACCESS_CHILD15", "PCT_NHASIAN10", "PCT_NHNA10", "SUPERCPTH16", "PCT_SNAP17", "PCT_OBESE_ADULTS17", "PCT_NHWHITE10", "PCT_NHPI10")
 
 variables_to_keep <- setdiff(colnames(Z), variables_to_test)
 q <- length(variables_to_keep) - 1 # Not counting the intercept
@@ -303,7 +302,11 @@ approx_LR_test_statistic <-
 
 # Reject?
 ifelse(approx_LR_test_statistic > qchisq(1-alpha, m * (r - q)), "Reject H0", "Don't reject H0")
+# The corresponding p-value is:
+pchisq(approx_LR_test_statistic, df = m * (r - q), lower.tail = FALSE)
 
+
+# Or using the approximate F-statistic:
 W <- det(estSigma) / det(estSigma1)
 
 h <- length(variables_to_test)  
@@ -318,9 +321,103 @@ d3 <- if (d3 > 0) {
 
 F_approx_stat <- ((W^(-1 / d3) - 1) * (d1 * d3 - 2 * d2)) / (m  * h)
 
+# Reject?
+ifelse(F_approx_stat > qf(1-alpha, m * h, d1 * d3 - 2*d2), "Reject H0", "Don't reject H0")
+
 # The corresponding p-value is:
 pf(F_approx_stat, m * h, d1 * d3 - 2 * d2, lower.tail = FALSE)
 ```
+
+
+The likelihood ratio test statistic is 52.71743 with p-value 0.2374044, therefore we fail to reject $H_0$ that all the coefficients for the 10 predictors "PCT_LACCESS_POP15", "PCT_LACCESS_SNAP15", "PCT_LACCESS_CHILD15", "PCT_NHASIAN10", "PCT_NHNA10", "SUPERCPTH16", "PCT_SNAP17", "PCT_OBESE_ADULTS17", "PCT_NHWHITE10", and "PCT_NHPI10" are 0 at 95% level. The approximate F statistic test gives the same conclusion.
+
+
+Compute a bootstrap distribution of the likelihood ratio test statistic for the test of the hypothesis $H_0:β_{PCT\_LACCESS\_POP15}=β_{PCT\_LACCESS\_SNAP15}=\ldots=β_{PCT\_NHPI10}=0$ and compare it to the approximate $F$ distribution and to the approximate $χ^2$ distribution. 
+
+```{r}
+##rm(list = ls())
+
+# Bootstrap study:
+set.seed(697)
+S <- 10000
+
+LR_stat_sample <- numeric(S)
+R1 <- numeric(S)
+R2 <- numeric(S)
+R3 <- numeric(S)
+
+s <- 1
+
+n<-nrow(df)
+while (s <= S) {
+  try({
+    # resample - sample from the original data frame with replacements
+    bootstrap_sample_idx <- sample(n, replace = TRUE)
+    bstp_df <- df[bootstrap_sample_idx, ]
+    
+    res_full_model <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ ., data = bstp_df)
+    summary <- summary(res_full_model)
+  
+    R1[s] <- summary$`Response FOODINSEC_15_17`$r.squared
+    R2[s] <- summary$`Response CH_FOODINSEC_14_17`$r.squared
+    R3[s] <- summary$`Response VLFOODSEC_15_17`$r.squared
+    
+    res_partial_model <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ PCT_LACCESS_POP15+ PCT_LACCESS_SNAP15+PCT_LACCESS_CHILD15+PCT_NHASIAN10+PCT_NHNA10+SUPERCPTH16+PCT_SNAP17+PCT_OBESE_ADULTS17+PCT_NHWHITE10+PCT_NHPI10, data = bstp_df)
+  
+    estSigma <- t(resid(res_full_model)) %*% resid(res_full_model) / n
+    estSigma1 <- t(res_partial_model$residuals) %*% res_partial_model$residuals / n
+    
+    LR_stat_sample[s] <- det(estSigma) / det(estSigma1)
+    
+    s <- s + 1
+  })
+}
+
+# CI for R^2
+quantile(R1, c(0.025, 0.975)) # define CI for R^2 of FOODINSEC_15_17
+quantile(R2, c(0.025, 0.975)) # define CI for R^2 of CH_FOODINSEC_14_17
+quantile(R3, c(0.025, 0.975)) # define CI for R^2 of VLFOODSEC_15_17
+
+# p-value for bootstrap sample:
+sum( LR_stat_sample < W ) / S
+```
+
+
+```{r}
+# Rescale the bootstrap sample to the approximate F scale:
+d1 <- (n - r - 1) - 0.5 * (m - h + 1)
+d2 <- (m * h - 2)/4
+d3 <- m^2 + h^2 - 5
+d3 <- if (d3 > 0) { 
+  sqrt(((m * h)^2 - 4) / d3)
+} else { 1 }
+
+F_approx_stat <- ((LR_stat_sample^(-1 / d3) - 1) * (d1 * d3 - 2 * d2)) / (m  * h)
+crit_F <- ((W^(-1 / d3) - 1) * (d1 * d3 - 2 * d2)) / (m  * h)
+
+hist(F_approx_stat, freq = FALSE, breaks = 40, main = "Bootstrap and F approximation")
+rng <- range(F_approx_stat)
+x <- seq(rng[1], rng[2], length.out = 100)
+lines(x, df(x, m * h, d1 * d3 - 2 * d2))
+abline(v = crit_F)
+```
+
+```{r}
+# Rescale the bootstrap sample to the approximate chi squared scale:
+chi_sq_approx_stat <- -(n - r - 1 - 0.5 * (m - r + q + 1)) * log(LR_stat_sample)
+crit_chisq  <- -(n - r - 1 - 0.5 * (m - r + q + 1)) * log(W)
+
+hist(chi_sq_approx_stat, freq = FALSE, breaks = 40, main = "Bootstrap and chi-square approximation")
+rng <- range(chi_sq_approx_stat)
+x <- seq(rng[1], rng[2], length.out = 100)
+lines(x, dchisq(x, m * (r - q)))
+abline(v = crit_chisq)
+```
+
+Are the exact bootstrap distribution and its approximations matching well? What is the p-value for the test based on each of the three methods? 
+
+The exact bootstrap distribution does not align with the F approximations nor the chi-square approximation based on the histograms and p-approximations value. 
+ The p-values for the approximate likelihood ratio test, the approximate F test and the bootstrap are 1.088297e-08, 1.129749e-08 and 4e-04. 
 
 Compute a bootstrap distribution of the likelihood ratio test statistic for the test of the hypothesis $H_0:β_{1}=β_{2}=\ldots=β_{19}=0$ and compare it to the approximate $F$ distribution and to the approximate $χ^2$ distribution. Are the exact bootstrap distribution and its approximations matching well? What is the p-value for the test based on each of the three methods? 
 
