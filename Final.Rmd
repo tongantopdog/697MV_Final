@@ -29,7 +29,8 @@ For this project in particular, we aim to study the social determinants of food 
 
 In order to study this even further, we found data from the United States Department of Agriculture under their Economic Research Service. They published a dataset with over 275 variables, uniquely identified by FIPS county codes. For each county, they collected categories of data like Access, Health, Local Foods, and Price Taxes etc. Within these categories, this dataset contains several variables with comprehensive data on counts of households that have or do not have access to supermarkets, counts of store availability and whether it is within a walking distance of homes in that county, counts of fast food restaurant availability near home, counts of WIC redemptions, and number of local foods and farms, as well as variables concerning  socioeconomic status. Also included in this dataset were variables concerning food insecurity: household food insecurity, household low food insecurity, and child food insecurity, however, accounted for at the State and not FIPS county level. 
 
-We have in total in this dataset 
+
+To prepare our data for this study, we took weighted average of each 
 
 ** A description of the data preparation process.  
 **-take aggregate of the variates
@@ -44,11 +45,34 @@ Cleaning data
 
 
 ```{r}
+(df <- read_csv("final_data.csv"))
 
+df<-df%>% 
+  select(-FOODINSEC_12_14, -VLFOODSEC_12_14,  -CH_VLFOODSEC_14_17, -SNAPSPTH17)
+n <- nrow(df)
+
+#Response
 hist(df$FOODINSEC_15_17)
 hist(df$VLFOODSEC_15_17)
 hist(df$CH_FOODINSEC_14_17)
 
+
+#Predictors
+hist(df$PCT_LACCESS_POP15)
+hist(df$PCT_LACCESS_HHNV15)
+hist(df$PCT_LACCESS_SNAP15)
+
+hist(df$PCT_LACCESS_CHILD15)
+hist(df$PCT_NHASIAN10)
+hist(df$PCT_NHWHITE10)
+hist(df$PCT_NHBLACK10)
+hist(df$PCT_HISP10)
+hist(df$PCT_NHNA10)
+hist(df$PCT_NHPI10)
+hist(df$GROCPTH16)
+hist(df$PCT_REDUCED_LUNCH15)
+hist(df$PCT_OBESE_ADULTS17)
+hist
 ```
 
 ##Research Questions
@@ -66,8 +90,8 @@ An additional possible question we would like to explore is whether a factor of 
 In order to conduct this study, we will begin by conducting a multivariate
 regression model with all of our predictor variables of interest and our three explained variables regarding food insecurity. Our predictor variables are:
 
-- PCT_LACCESS15 = percent of population with low access to a stores in 2015
-- percent of households with no car and low access to stores in 2015
+- PCT_LACCESS_POP15 = percent of population with low access to a stores in 2015
+- PCpercent of households with no car and low access to stores in 2015
 - percent of SNAP households with low access to stores in 2015
 - percent of children with low access to store in 2015
 - percent of neighborhood that is white 
@@ -105,12 +129,7 @@ Results for Likelihood Ratio test Bootstrap
 
 ##Conclusion
 
-```{r}
-(df <- read_csv("final_data.csv"))
-df<-df%>% 
-  select(-FOODINSEC_12_14, -VLFOODSEC_12_14, -State, -CH_VLFOODSEC_14_17, -SNAPSPTH17)
-n <- nrow(df)
-```
+
 
 *Brief summary of the data, variables
 
@@ -126,10 +145,14 @@ $y_3=$ stress at failure,
 $y_4=$ burst strength.   
 
 In order to conduct this study, we will begin by conducting a multivariate regression model with all of our predictor variables of interest and our three explained variables regarding food insecurity. Included in this method will be simultaneous confidence intervals for our predictor variables.
+
 ```{r}
 # using the lm()
 res <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ ., data = df)
 summary(res)
+
+res2 <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ PCT_LACCESS_POP15+PCT_OBESE_ADULTS17, data = df)
+summary(res2)
 
 # Residuals:
 head(resid(res))
@@ -140,32 +163,17 @@ sigma(res)
 round(vcov(res), 2)
 ```
 
-**** (I think this is incorrect, please take a look at the next chunk of code) 95% simultaneous confidence intervals 
-```{r}
-alpha <- 0.05
+Above we have our multivariate linear model exploring the potential impacts of our variates of interest and food insecurity. Looking at our variable, Food Insecurity from 2015 to 2017, we find very strong relationships with Fast Food Restaurants for every thousand people and percent of county with free or reduced lunch in 2015. Secondary relationships we found were with WIC-accepted Stores per thousand people and Recreational Centers per thousand people. We found these results to be interesting as assistance in the sense of reducing the cost of food and indicators of food insecure areas like number of Fast food restaurants and larger number of stores accepting state food support, had significant coefficents. Looking at the magnitude of reduced lunch, it seems as though there is a potential benefit to having more assistance in reducing food costs. When it comes to the indicators of food insecurity, the presence of fast food restaurants seems to be very signicant and looking at the magnitude, a much stronger potential indicator of food insecure areas. The same idea translates to our signifance to percentage of Wic accepted stores. Although we would think that with more WIC-accepted stores we would see a negative magnitude due to a reduced cost to food, but in terms of our data and linear model, could be viewed as an indicator instead. 
 
-p <- 21
-n <- nrow(df)
+Moving towards our second multivariate linear model, we are looking at drawing relationships between our predictors and Child Food Insecurity. Comparable to our model with Food Insecurity, we found less coefficents from our predictors to hold signifcance in this model. We found percentage of neighborhood that is Black to have a signicantly negative relationship with Child Food Insecurity, percent of grocery stores per thousand residents to have a postive and very large magnitude, and lastly, percent of population that receives reduced lunch to have a signicantly negative relationship. We found these results to be pretty surprising considering that one of our research questions sought to look at the relationship between racial demographics and food insecurity. In this case our model tested and found that with higher percentage of black communites, we on average are likely to see less child food insecurity, which is the opposite of the result we were expecting to see and we aren't quite sure how to interpret that with a real world context. The other result of a positive relationship between percentage of grocery stores and food insecurity was also surprising. One one end, having more grocery stores could signal a less food insecure state simply because there is access to more perishable goods comparable to what a supercenter, fast food, or full service restaurant could provide, but on the other hand it doesn't indicate whether residents can still access the grocery stores due to potential higher prices. 
 
-Y <- as.matrix(df %>% 
-                 select(FOODINSEC_15_17,CH_FOODINSEC_14_17, VLFOODSEC_15_17))
-               
-(y_bar <- matrix(colMeans(Y), ncol = 1))
 
-F_critical <- (p * (n - 1) / (n - p)) * qf(1 - alpha, p, n - p) 
-s_d <- diag(cov(df))
+Lastly, here are the results for our response variable: Households with Very Low Food security. Again, we found pretty signicant relationships between our coefficients for percent of county enrolled in free or reduced lunch and percent of WIC-accepted grocery stores per thousand people. An added interest was the associated signifcance from the coefficent for percentage of neighborhood that is Hispanic. In this case, our estimated coefficent was negative meaning with higher percentage of hispanic residents, we should expect a smaller amount of food insecurity. Again here we see a different result than we were expecting in terms of race and food security which was very surpising. We also saw a bit of significance from our coeffecients on percent of recreational faciliites per thousand people and percent of fast food restaurants per thousand residents.  Similar to our results with our Food Insecurity response variable, we see that there are competing relationships where the coefficient for reduced lunch and recreation facilities provide a negative relationship to food insecurity, whereas the presence of WIC supported stores and fast food restaurants potentially have a postive coefficent in regards to households with very low food security. 
 
-CI_mat <-
-  mapply(
-    function(y_bar, s_d) y_bar + c(-1, 1) * sqrt(F_critical * s_d / n), 
-    y_bar,
-    s_d
-    )
-cat("Simultaneous confidence intervals:\n")
-t(CI_mat)
-```
 
-Prediction intervals + confidence intervals
+Overall, what we found were competing relationships between what we would consider indcators of more food insecure areas and assistance for reducing the costs of food. What we thought we would also see was a separate relationship with racial demographics and food insecurity, however, that was not something we could find with this current data. 
+
+
 ```{r}
 alpha <- 0.05
 
@@ -175,12 +183,17 @@ Z <- as.matrix(cbind(const = 1, df %>% select(1:19)))
 r <- ncol(Z) - 1  # number of predictors (excluding constantn
 b <- solve(t(Z) %*% Z) %*% t(Z) %*% Y
 
+pred <- Z %*% b
+resid <- Y - pred
+estSigma <- t(resid) %*% resid / n
+
 # new observation for predictors 
 z0 <- 
   matrix(
-    c(1,0.33, 0.5, 0.6),
+    c(1, 25, 5, 1.3,  0.5, 34, 39, 9,3,0.2, 0.04, 0.24, 0.006, 1, 0.09, 0.6, 15, 
+      18, 4.7, 25.6),
     ncol=1, 
-    dimnames = list(c("const", "HH_FINSEC", "VLHH_FINSEC", "CH_FINSEC"), NULL)
+    dimnames = list(c("const", "PCT_LACCESS_POP15", "PCT_LACCESS_HHNV15", "PCT_LACCESS_SNAP15", "LACCESS_CHILD15", "PCT_NHWHITE10", "PCT_NHBLACK10", "PCT_HISP10", "PCT_NHASIAN10", "PCT_NHNA10", "PCT_NHPI10", "GROCPTH16", "SUPERCPTH16", "WICSPTH16", "FFRPTH16", "FSRPTH16", "PCT_SNAP17", "PCT_REDUCED_LUNCH15", "PCT_OBESE_ADULTS17", "RECFACPTH16"), NULL)
   )
 
 #choose z0 that is meaningful 
@@ -194,19 +207,29 @@ fctr_pred <-
     (1 + t(z0) %*% solve(t(Z) %*% Z,tol = 1e-19) %*% z0) * 
       (m * (n - r - 1) * qf(alpha, m, n - r - m, lower.tail = FALSE) / (n - r - m)))
 
-a <- matrix(c(1, 0, 0, 0), ncol = 1)
-half_CI <- (sqrt(t(a) %*% (estSigma * n / (n - r - 1)) %*% a)) * fctr_pred
-pred_CI_Y1 <- c(t(a) %*%  cntr - half_CI, t(a) %*%  cntr + half_CI)
-##### ****** Use mapply here? 
+A <- diag(3)
+for (i in 1:3){
+  a <- A[ ,i]
+  half_CI <- (sqrt(t(a) %*% (estSigma * n / (n - r - 1)) %*% a)) * fctr_pred
+  pred_CI_Y <- c(t(a) %*%  cntr - half_CI, t(a) %*%  cntr + half_CI)
+  cat(paste0("95% simultaneous prediction interval for Y0",i, ":  (", pred_CI_Y), ")")
+}
 
 # Confidence interval: 
 fctr <- 
   sqrt(
     (t(z0) %*% solve(t(Z) %*% Z) %*% z0) * 
       (m * (n - r - 1) * qf(alpha, m, n - r - m, lower.tail = FALSE) / (n - r - m)))
+
+for (i in 1:3){
+  a <- A[ ,i]
+  half_CI <- (sqrt(t(a) %*% (estSigma * n / (n - r - 1)) %*% a)) * fctr
+  pred_CI_Y <- c(t(a) %*%  cntr - half_CI, t(a) %*%  cntr + half_CI)
+  cat(paste0("95% simultaneous confidence interval for Y0",i, ":  (", pred_CI_Y), ")\n")
+}
 ```
 
-
+Above we have our simultaneous confidence interval and simultaneous prediction interval. 
 
 # Factor Analysis
 
@@ -233,7 +256,6 @@ psi_tilde_m2 <- diag(R2 - Ltilde_m2 %*% t(Ltilde_m2))
 Psi_tilde_m2 <- diag(psi_tilde_m2)
 residual_matrix_m2 <- R2 - Ltilde_m2 %*% t(Ltilde_m2) - Psi_tilde_m2
 (eig2$values[1] / sum(eig2$values))
-
 
 #Demographics
 df_f3 <- df %>% select(5:10)
@@ -270,27 +292,21 @@ residual_matrix_m5 <- R5 - Ltilde_m5 %*% t(Ltilde_m5) - Psi_tilde_m5
 (eig5$values[1] / sum(eig5$values))
 ```
 
+Above we have the factor analysis of our different factors of interest. In this case it was Racial Demographics, Health, Store Accesss, Access, and Food Insecurity. Looking at Food Insecurity, we see that
+the total variance for this factors is somewhat explained by one factor, however, it is not very strong. Evaluating Store Access with the variables, Grocery store per thousand people, Super Center per thousand people, WICS-accepted stores per thousand people, Fast food restaurants per thousand people, Full-service restaurants and percent of SNAP redemptions in a county. We found this to by one our most significant loading with 78 percent of its variation being explained in this one factor.  Another similar factor was Access. Looking at our variables concering geographical access to a store near households, 77 percent of its variation can be explained by a single factor
+
+
+
+
+
+
+
 From here we will utilize the bootstrapping method for evaluating point estimates from R-squared. This will be done by creating bootstrap sample estimates for R-squared and then confidence intervals for R-squared based on the distribution of bootstrap distributions we simulate. Our second method with bootstrapping will be conducted by calculating the likelihood ratio test statistic of one of or more of our predictor variables and comparing it to the F distribution and the approximate chi-squared distribution.
 
 #Bootstrapping
 ##Likelihood Ratio Test
-
 ```{r}
-n <- nrow(df)
-
-Y <- as.matrix(df %>% select(20:22))
-m <- ncol(Y) # number of responses
-Z <- as.matrix(cbind(const = 1, df %>% select(1:19)))
-r <- ncol(Z) - 1  # number of predictors (excluding constant)
-
-b <- solve(t(Z) %*% Z,tol = 1e-19) %*% t(Z) %*% Y
-pred <- Z %*% b
-resid <- Y - pred
-
-b
-
-variables_to_test <-  c("PCT_LACCESS_POP15", "PCT_LACCESS_HHNV15","PCT_LACCESS_SNAP15","LACCESS_CHILD15","GROCPTH16","SUPERCPTH16","PCT_NHWHITE10","PCT_NHBLACK10","PCT_HISP10","PCT_NHASIAN10","PCT_NHNA10","PCT_NHPI10","FFRPTH16","FSRPTH16","PCT_SNAP17", "PCT_OBESE_ADULTS17", "WICSPTH16", "RECFACPTH16")
-
+variables_to_test <-  c("PCT_LACCESS_POP15", "PCT_LACCESS_HHNV15","PCT_LACCESS_SNAP15","PCT_LACCESS_CHILD15","GROCPTH16","SUPERCPTH16","PCT_LACCESS_WHITE15","PCT_LACCESS_BLACK15","SNAPSPTH17","PCT_LACCESS_HISP15","PCT_LACCESS_NHASIAN15","PCT_LACCESS_NHNA15","PCT_LACCESS_NHPI15","FFRPTH16","FSRPTH16","PCT_SNAP17")
 
 variables_to_keep <- setdiff(colnames(Z), variables_to_test)
 q <- length(variables_to_keep) - 1 # Not counting the intercept
@@ -312,7 +328,7 @@ approx_LR_test_statistic <-
   -(n - r - 1 - 0.5 * (m - r + q + 1)) * (log(det(estSigma)) - log(det(estSigma1)))
 
 # Reject?
-ifelse(approx_LR_test_statistic > qchisq(0.95, m * (r - q)), "Reject H0", "Don't reject H0")
+ifelse(approx_LR_test_statistic > qchisq(1-alpha, m * (r - q)), "Reject H0", "Don't reject H0")
 
 W <- det(estSigma) / det(estSigma1)
 
@@ -330,51 +346,78 @@ F_approx_stat <- ((W^(-1 / d3) - 1) * (d1 * d3 - 2 * d2)) / (m  * h)
 
 # The corresponding p-value is:
 pf(F_approx_stat, m * h, d1 * d3 - 2 * d2, lower.tail = FALSE)
+```
 
+Compute a bootstrap distribution of the likelihood ratio test statistic for the test of the hypothesis $H_0:β_{1}=β_{2}=\ldots=β_{19}=0$ and compare it to the approximate $F$ distribution and to the approximate $χ^2$ distribution. Are the exact bootstrap distribution and its approximations matching well? What is the p-value for the test based on each of the three methods? 
+
+```{r}
+##rm(list = ls())
 
 # Bootstrap study:
-n <- nrow(df)
+set.seed(697)
+S <- 100####### 10000
 
-S <- 10000
 LR_stat_sample <- numeric(S)
+R1 <- numeric(S)
+R2 <- numeric(S)
+R3 <- numeric(S)
 
 s <- 1
+
+n<-nrow(df)
 while (s <= S) {
   try({
+    # resample - sample from the original data frame with replacements
     bootstrap_sample_idx <- sample(n, replace = TRUE)
     bstp_df <- df[bootstrap_sample_idx, ]
     
-    Y <- as.matrix(bstp_df %>% select(20:22))
-    m <- ncol(Y)
+    res_full_model <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ ., data = bstp_df)
+    summary <- summary(res_full_model)
+  
+    R1[s] <- summary$`Response FOODINSEC_15_17`$r.squared
+    R2[s] <- summary$`Response CH_FOODINSEC_14_17`$r.squared
+    R3[s] <- summary$`Response VLFOODSEC_15_17`$r.squared
     
-    variables_to_test <- c("PCT_LACCESS_POP15", "PCT_LACCESS_HHNV15","PCT_LACCESS_SNAP15","LACCESS_CHILD15","GROCPTH16","SUPERCPTH16","PCT_NHWHITE10","PCT_NHBLACK10","PCT_HISP10","PCT_NHASIAN10","PCT_NHNA10","PCT_NHPI10","FFRPTH16","FSRPTH16","PCT_SNAP17", "PCT_OBESE_ADULTS17", "WICSPTH16", "RECFACPTH16")
-
-    variables_to_keep <- setdiff(colnames(Z), variables_to_test)
-    grp1 <- rownames(b) %in% variables_to_keep
-    grp2 <- rownames(b) %in% variables_to_test
-    
-    Z <- as.matrix(cbind(const = 1, bstp_df %>% select(1:19)))
-    
-    Z[ , grp2] <- Z[sample(nrow(Z)), grp2]   # shuffle rows of tested predictors
-    
-    r <- ncol(Z) - 1
-    
-    b <- solve(t(Z) %*% Z, tol = 2.05722e-18) %*% t(Z) %*% Y
-    pred <- Z %*% b
-    resid <- Y - pred
-    
-    estSigma <- t(resid) %*% resid / n
-    
-    b_grp1 <- solve(t(Z[ , grp1]) %*% Z[ , grp1]) %*% t(Z[ , grp1]) %*% Y
-    estSigma1 <- t(Y - Z[ , grp1] %*% b_grp1) %*% (Y - Z[ , grp1] %*% b_grp1) / n
+    res_partial_model <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ PCT_REDUCED_LUNCH15+PCT_OBESE_ADULTS17, data = bstp_df)
+  
+    estSigma <- t(resid(res_full_model)) %*% resid(res_full_model) / n
+    estSigma1 <- t(res_partial_model$residuals) %*% res_partial_model$residuals / n
     
     LR_stat_sample[s] <- det(estSigma) / det(estSigma1)
+    
     s <- s + 1
   })
 }
 
-# p-value for bootstrap sample:
-sum( LR_stat_sample < W ) / S
-
+# CI for R^2
+quantile(R1, c(0.025, 0.975)) # define CI for R^2 of FOODINSEC_15_17
+quantile(R2, c(0.025, 0.975)) # define CI for R^2 of CH_FOODINSEC_14_17
+quantile(R3, c(0.025, 0.975)) # define CI for R^2 of VLFOODSEC_15_17
 ```
-#Use HW 7 code 
+
+```{r}
+# Rescale the bootstrap sample to the approximate F scale:
+d1 <- (n - r - 1) - 0.5 * (m - h + 1)
+d2 <- (m * h - 2)/4
+d3 <- m^2 + h^2 - 5
+d3 <- if (d3 > 0) { 
+  sqrt(((m * h)^2 - 4) / d3)
+} else { 1 }
+
+F_approx_stat <- ((LR_stat_sample^(-1 / d3) - 1) * (d1 * d3 - 2 * d2)) / (m  * h)
+
+hist(F_approx_stat, freq = FALSE, breaks = 40, main = "Bootstrap and F approximation")
+rng <- range(F_approx_stat)
+x <- seq(rng[1], rng[2], length.out = 100)
+lines(x, df(x, m * h, d1 * d3 - 2 * d2))
+```
+
+```{r}
+# Rescale the bootstrap sample to the approximate chi squared scale:
+chi_sq_approx_stat <- -(n - r - 1 - 0.5 * (m - r + q + 1)) * log(LR_stat_sample)
+
+hist(chi_sq_approx_stat, freq = FALSE, breaks = 40, main = "Bootstrap and chi-square approximation")
+rng <- range(chi_sq_approx_stat)
+x <- seq(rng[1], rng[2], length.out = 100)
+lines(x, dchisq(x, m * (r - q)))
+```
