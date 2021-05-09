@@ -321,7 +321,7 @@ pf(F_approx_stat, m * h, d1 * d3 - 2 * d2, lower.tail = FALSE)
 
 Compute a bootstrap distribution of the likelihood ratio test statistic for the test of the hypothesis $H_0:β_{1}=β_{2}=\ldots=β_{19}=0$ and compare it to the approximate $F$ distribution and to the approximate $χ^2$ distribution. Are the exact bootstrap distribution and its approximations matching well? What is the p-value for the test based on each of the three methods? 
 
-PCT_LACCESS_POP15+PCT_LACCESS_HHNV15+PCT_LACCESS_SNAP15+PCT_LACCESS_CHILD15+PCT_NHWHITE10+ PCT_NHASIAN10+PCT_NHNA10+PCT_NHPI10+FSRPTH16+PCT_SNAP17+ PCT_OBESE_ADULTS17+PCT_NHBLACK10+PCT_HISP10+GROCPTH16
+
 
 ```{r}
 ##rm(list = ls())
@@ -352,7 +352,7 @@ while (s <= S) {
     R2[s] <- summary$`Response CH_FOODINSEC_14_17`$r.squared
     R3[s] <- summary$`Response VLFOODSEC_15_17`$r.squared
     
-    res_partial_model <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ PCT_NHBLACK10+ PCT_HISP10+GROCPTH16 + SUPERCPTH16 + WICSPTH16 + FFRPTH16 + PCT_REDUCED_LUNCH15+RECFACPTH16,data = bstp_df)
+    res_partial_model <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ PCT_LACCESS_POP15+PCT_LACCESS_HHNV15+PCT_LACCESS_SNAP15+PCT_LACCESS_CHILD15+PCT_NHWHITE10+ PCT_NHASIAN10+PCT_NHNA10+PCT_NHPI10+FSRPTH16+PCT_SNAP17+ PCT_OBESE_ADULTS17+PCT_NHBLACK10+PCT_HISP10+GROCPTH16,data = bstp_df)
     summary(res_partial_model)
   
     estSigma <- t(resid(res_full_model)) %*% resid(res_full_model) / n
