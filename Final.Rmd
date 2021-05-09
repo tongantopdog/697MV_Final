@@ -96,7 +96,10 @@ hist(df$PCT_REDUCED_LUNCH15)
 hist(df$PCT_OBESE_ADULTS17)
 hist(df$PCT_SNAP17)
 hist(df$WICSPTH16)
-hist(df$)
+hist(df$FSRPTH16)
+hist(df$FFRPTH16)
+hist(df$RECFACPTH16)
+hist(df$SUPERCPTH16)
 summary(df)
 
 
@@ -417,3 +420,4 @@ rng <- range(chi_sq_approx_stat)
 x <- seq(rng[1], rng[2], length.out = 100)
 lines(x, dchisq(x, m * (r - q)))
 ```
+
