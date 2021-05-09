@@ -16,12 +16,6 @@ library(purrr)
 library(tidyverse)
 ```
 
-** A description of the data preparation process.  
-**-take aggregate of the variates
-**-categorical, perhaps using the proportion instead
-**-look at the medium of the entire category 
-**-Take a weighted mean, weighted by the relative size of the counties.
-
 
 ##Introduction
 
@@ -37,7 +31,15 @@ In order to study this even further, we found data from the United States Depart
 
 We have in total in this dataset 
 
+** A description of the data preparation process.  
+**-take aggregate of the variates
+**-categorical, perhaps using the proportion instead
+**-look at the medium of the entire category 
+**-Take a weighted mean, weighted by the relative size of the counties.
+
 ###Data Distributions 
+
+Cleaning data
  
 
 
@@ -64,7 +66,7 @@ An additional possible question we would like to explore is whether a factor of 
 In order to conduct this study, we will begin by conducting a multivariate
 regression model with all of our predictor variables of interest and our three explained variables regarding food insecurity. Our predictor variables are:
 
-- percent of population with low access to a stores in 2015
+- PCT_LACCESS15 = percent of population with low access to a stores in 2015
 - percent of households with no car and low access to stores in 2015
 - percent of SNAP households with low access to stores in 2015
 - percent of children with low access to store in 2015
