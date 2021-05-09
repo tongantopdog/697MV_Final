@@ -93,7 +93,13 @@ Another method we will be using from our course is conducting a factor analysis 
 
 ##Results
 
+Results for mlm test and simultanous CI and prediction intevals
 
+Results of Factor analysis
+
+Results for R-Squared Bootstarp
+
+Results for Likelihood Ratio test Bootstrap
 
 ##Conclusion
 
@@ -161,9 +167,9 @@ Prediction intervals + confidence intervals
 ```{r}
 alpha <- 0.05
 
-Y <- as.matrix(df %>% select(21:23))
+Y <- as.matrix(df %>% select(20:22))
 m <- ncol(Y) # number of responses
-Z <- as.matrix(cbind(const = 1, df %>% select(1:20)))
+Z <- as.matrix(cbind(const = 1, df %>% select(1:19)))
 r <- ncol(Z) - 1  # number of predictors (excluding constantn
 b <- solve(t(Z) %*% Z) %*% t(Z) %*% Y
 
