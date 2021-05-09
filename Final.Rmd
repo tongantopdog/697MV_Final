@@ -151,8 +151,10 @@ In order to conduct this study, we will begin by conducting a multivariate regre
 res <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ ., data = df)
 summary(res)
 
-res2 <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ PCT_LACCESS_POP15+PCT_OBESE_ADULTS17, data = df)
+res2 <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ PCT_NHBLACK10+ PCT_HISP10+GROCPTH16 + SUPERCPTH16 + WICSPTH16 + FFRPTH16 + PCT_REDUCED_LUNCH15+RECFACPTH16, data = df)
 summary(res2)
+
+
 
 # Residuals:
 head(resid(res))
@@ -169,6 +171,9 @@ Moving towards our second multivariate linear model, we are looking at drawing r
 
 
 Lastly, here are the results for our response variable: Households with Very Low Food security. Again, we found pretty signicant relationships between our coefficients for percent of county enrolled in free or reduced lunch and percent of WIC-accepted grocery stores per thousand people. An added interest was the associated signifcance from the coefficent for percentage of neighborhood that is Hispanic. In this case, our estimated coefficent was negative meaning with higher percentage of hispanic residents, we should expect a smaller amount of food insecurity. Again here we see a different result than we were expecting in terms of race and food security which was very surpising. We also saw a bit of significance from our coeffecients on percent of recreational faciliites per thousand people and percent of fast food restaurants per thousand residents.  Similar to our results with our Food Insecurity response variable, we see that there are competing relationships where the coefficient for reduced lunch and recreation facilities provide a negative relationship to food insecurity, whereas the presence of WIC supported stores and fast food restaurants potentially have a postive coefficent in regards to households with very low food security. 
+
+
+Now that we ran our multivariate linear model with all of our predictor variables, we also ran a restricted model including all of the variables that were signicant in our previous model
 
 
 Overall, what we found were competing relationships between what we would consider indcators of more food insecure areas and assistance for reducing the costs of food. What we thought we would also see was a separate relationship with racial demographics and food insecurity, however, that was not something we could find with this current data. 
@@ -245,12 +250,15 @@ Psi_tilde_m1 <- diag(psi_tilde_m1)
 residual_matrix_m1 <- R - Ltilde_m1 %*% t(Ltilde_m1) - Psi_tilde_m1
 (eig$values[1] / sum(eig$values))
 
+Ltilde_m1 %*% t(Ltilde_m1)
+
 #Access
 
-df_f2 <- df %>% select(1:4,PCT_REDUCED_LUNCH15)
+df_f2 <- df %>% select(1:4)
 R2<- cor(df_f2)
 eig2 <- eigen(R2)
 (Ltilde_m2 <- sqrt(eig2$values[1]) * eig2$vectors[ , 1, drop = F])
+
 
 psi_tilde_m2 <- diag(R2 - Ltilde_m2 %*% t(Ltilde_m2))
 Psi_tilde_m2 <- diag(psi_tilde_m2)
@@ -279,26 +287,19 @@ Psi_tilde_m4 <- diag(psi_tilde_m4)
 residual_matrix_m4 <- R4 - Ltilde_m4 %*% t(Ltilde_m4) - Psi_tilde_m4
 (eig4$values[1] / sum(eig4$values))
 
-#Health
 
-df_f5 <- df %>% select(PCT_OBESE_ADULTS17,RECFACPTH16)
-R5 <- cor(df_f5)
-eig5 <- eigen(R5)
-(Ltilde_m5 <- sqrt(eig5$values[1]) * eig5$vectors[ , 1, drop = F])
-
-psi_tilde_m5 <- diag(R5 - Ltilde_m5 %*% t(Ltilde_m5))
-Psi_tilde_m5 <- diag(psi_tilde_m5)
-residual_matrix_m5 <- R5 - Ltilde_m5 %*% t(Ltilde_m5) - Psi_tilde_m5
-(eig5$values[1] / sum(eig5$values))
 ```
 
-Above we have the factor analysis of our different factors of interest. In this case it was Racial Demographics, Health, Store Accesss, Access, and Food Insecurity. Looking at Food Insecurity, we see that
-the total variance for this factors is somewhat explained by one factor, however, it is not very strong. Evaluating Store Access with the variables, Grocery store per thousand people, Super Center per thousand people, WICS-accepted stores per thousand people, Fast food restaurants per thousand people, Full-service restaurants and percent of SNAP redemptions in a county. We found this to by one our most significant loading with 78 percent of its variation being explained in this one factor.  Another similar factor was Access. Looking at our variables concering geographical access to a store near households, 77 percent of its variation can be explained by a single factor
+Above we have the factor analysis using the Principal Component Method and our different factors of interest. In this case it was Racial Demographics, Health, Store Accesss, Access, and Food Insecurity.
+
+Looking at Food Insecurity, we see that the total variance for this factors is somewhat explained by one factor, however, it is not very strong. Looking at the residual matrix, the non-diagonal elements seem to be small or at least close to zero. Therefore, the factor for Food Insecurity seems sufficient.
+
+Evaluating Store Access with the variables: Grocery store per thousand people, Super Center per thousand people, WICS-accepted stores per thousand people, Fast food restaurants per thousand people, Full-service restaurants and percent of SNAP redemptions in a county. Evaluting its residual matrix, all of the surrounding elements are very small which tells us that Store Access is a sufficient factor.
 
 
+Another similar factor was Access. Looking at our variables concering geographical access to a store near households, 93 percent of its variation can be explained by a single factor. Also evaluating the residual matrix calculated from our eigenvalue and vectors, we can see that Access is a very sufficient factor variable. 
 
-
-
+And lastly, one of our interests was to look at the potential realtionship between racial demographics. Here we can see if our demographic variables would be sufficient for a single factor. Evaluating the single factors 
 
 
 From here we will utilize the bootstrapping method for evaluating point estimates from R-squared. This will be done by creating bootstrap sample estimates for R-squared and then confidence intervals for R-squared based on the distribution of bootstrap distributions we simulate. Our second method with bootstrapping will be conducted by calculating the likelihood ratio test statistic of one of or more of our predictor variables and comparing it to the F distribution and the approximate chi-squared distribution.
@@ -306,7 +307,7 @@ From here we will utilize the bootstrapping method for evaluating point estimate
 #Bootstrapping
 ##Likelihood Ratio Test
 ```{r}
-variables_to_test <-  c("PCT_LACCESS_POP15", "PCT_LACCESS_HHNV15","PCT_LACCESS_SNAP15","PCT_LACCESS_CHILD15","GROCPTH16","SUPERCPTH16","PCT_LACCESS_WHITE15","PCT_LACCESS_BLACK15","SNAPSPTH17","PCT_LACCESS_HISP15","PCT_LACCESS_NHASIAN15","PCT_LACCESS_NHNA15","PCT_LACCESS_NHPI15","FFRPTH16","FSRPTH16","PCT_SNAP17")
+variables_to_test <-  c("PCT_LACCESS_POP15", "PCT_LACCESS_HHNV15", "PCT_LACCESS_SNAP15", "LACCESS_CHILD15", "PCT_NHWHITE10", "PCT_NHBLACK10", "PCT_HISP10", "PCT_NHASIAN10", "PCT_NHNA10", "PCT_NHPI10", "GROCPTH16", "SUPERCPTH16", "WICSPTH16", "FFRPTH16", "FSRPTH16", "PCT_SNAP17", "PCT_REDUCED_LUNCH15", "PCT_OBESE_ADULTS17", "RECFACPTH16")
 
 variables_to_keep <- setdiff(colnames(Z), variables_to_test)
 q <- length(variables_to_keep) - 1 # Not counting the intercept
@@ -378,7 +379,7 @@ while (s <= S) {
     R2[s] <- summary$`Response CH_FOODINSEC_14_17`$r.squared
     R3[s] <- summary$`Response VLFOODSEC_15_17`$r.squared
     
-    res_partial_model <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ PCT_REDUCED_LUNCH15+PCT_OBESE_ADULTS17, data = bstp_df)
+    res_partial_model <- lm(cbind(FOODINSEC_15_17, CH_FOODINSEC_14_17, VLFOODSEC_15_17) ~ PCT_LACCESS_POP15+PCT_LACCESS_HHNV15+PCT_LACCESS_SNAP15+PCT_LACCESS_CHILD15+PCT_NHWHITE10+ PCT_NHASIAN10+PCT_NHNA10+PCT_NHPI10+FSRPTH16+PCT_SNAP17+ PCT_OBESE_ADULTS17,data = bstp_df)
   
     estSigma <- t(resid(res_full_model)) %*% resid(res_full_model) / n
     estSigma1 <- t(res_partial_model$residuals) %*% res_partial_model$residuals / n
